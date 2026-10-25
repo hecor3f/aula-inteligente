@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Lecturas STEAM - Aula Inteligente{% endblock %}
+
+{% block head %}
+<style>
+    .header-section {
+        margin-bottom: 24px;
+    }
+
+    .header-section h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.8rem;
+    }
+
+    .readings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .reading-card {
+        background-color: var(--card-bg);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .reading-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent);
+    }
+
+    .badge-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        width: fit-content;
+    }
+
+    .tag-iot { background: rgba(14, 165, 233, 0.15); color: var(--accent); }
+    .tag-energy { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .tag-hardware { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+
+    .reading-card h2 {
+        font-size: 1.2rem;
+        margin: 0 0 10px 0;
+        color: var(--text-main);
+    }
+
+    .reading-card p {
+        color: var(--text-muted);
+        font-size: 0.92rem;
+        line-height: 1.5;
+        margin: 0 0 16px 0;
+    }
+
+    .time-estimate {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <h1>📚 Lecturas STEAM e IoT</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+        Explora conceptos clave sobre domótica, energía sustentable y tecnología para jóvenes inventores.
+    </p>
+</div>
+
+<div class="readings-grid">
+    <!-- Lectura 1 -->
+    <div class="reading-card">
+        <div>
+            <span class="badge-tag tag-iot">IoT & Redes</span>
+            <h2>🌐 ¿Qué es el Internet de las Cosas (IoT)?</h2>
+            <p>
+                Descubre cómo los objetos cotidianos, como focos, puertas y sensores, se conectan a Internet para comunicarse entre sí y tomar decisiones inteligentes.
+            </p>
+        </div>
+        <div class="time-estimate">⏱️ Lectura de 3 min</div>
+    </div>
+
+    <!-- Lectura 2 -->
+    <div class="reading-card">
+        <div>
+            <span class="badge-tag tag-energy">Sustentabilidad</span>
+            <h2>⚡ Eficiencia Energética en el Aula</h2>
+            <p>
+                ¿Por qué apagar las luces automáticamente cuando no hay nadie? Aprende cómo la automatización ayuda a reducir la huella de carbono y cuidar el planeta.
+            </p>
+        </div>
+        <div class="time-estimate">⏱️ Lectura de 4 min</div>
+    </div>
+
+    <!-- Lectura 3 -->
+    <div class="reading-card">
+        <div>
+            <span class="badge-tag tag-hardware">Hardware</span>
+            <h2>🤖 Sensores y Actuadores: Ojos y Músculos</h2>
+            <p>
+                Los sensores detectan el entorno (como el movimiento o la temperatura) y los actuadores realizan la acción física (como abrir una puerta con un servomotor).
+            </p>
+        </div>
+        <div class="time-estimate">⏱️ Lectura de 5 min</div>
+    </div>
+</div>
+{% endblock %}

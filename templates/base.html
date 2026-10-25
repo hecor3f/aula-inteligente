@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aula Inteligente STEAM{% endblock %}</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0 0 70px 0; /* Espacio inferior para la barra móvil */
+        }
+
+        /* Navbar para escritorio */
+        nav.top-nav {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid #334155;
+            padding: 15px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--text-main);
+        }
+
+        /* Contenedor principal */
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        /* Barra de navegación inferior para móvil */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--card-bg);
+            border-top: 1px solid #334155;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .bottom-nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bottom-nav a.active {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .bottom-nav { display: flex; }
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navegación Superior (Escritorio) -->
+    <nav class="top-nav">
+        <a href="/" class="nav-brand">🏫 Aula STEAM</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Control Panel</a>
+            <a href="/niveles" class="nav-link">Niveles Pi</a>
+            <a href="/lecturas" class="nav-link">Lecturas STEAM</a>
+        </div>
+    </nav>
+
+    <!-- Contenido Dinámico -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Navegación Inferior (Móvil) -->
+    <nav class="bottom-nav">
+        <a href="/">🎛️ Control</a>
+        <a href="/niveles">🚀 Niveles</a>
+        <a href="/lecturas">📚 Lecturas</a>
+    </nav>
+
+</body>
+</html>

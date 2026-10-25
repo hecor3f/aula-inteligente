@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Aula Inteligente - Panel de Control{% endblock %}
+
+{% block head %}
+<style>
+    .header-panel {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .header-panel h1 {
+        margin: 0 0 8px 0;
+        font-size: 1.8rem;
+    }
+
+    .connection-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        background: #334155;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+    }
+
+    .dot.online {
+        background: var(--success);
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        width: 100%;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+        font-size: 1.1rem;
+        color: var(--accent);
+        margin: 0 0 16px 0;
+    }
+
+    .status-pill {
+        align-self: center;
+        padding: 6px 16px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+
+    .pill-on {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+
+    .pill-off {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-group button {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: white;
+    }
+
+    .btn-group button:active {
+        transform: scale(0.96);
+    }
+
+    .btn-success { background-color: var(--success); }
+    .btn-danger { background-color: var(--danger); }
+    .btn-sim { background-color: var(--accent); }
+
+    .simulator-section {
+        margin-top: 30px;
+        background: var(--card-bg);
+        border: 1px dashed var(--accent);
+        border-radius: 16px;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .simulator-section h3 {
+        margin-top: 0;
+        color: var(--warning);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-panel">
+    <h1>🎛️ Panel de Control General</h1>
+    <div class="connection-status">
+        <span id="status-dot" class="dot"></span>
+        <span id="status-text">Desconectado</span>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Luces -->
+    <div class="card">
+        <h2>💡 Iluminación Aula</h2>
+        <div id="status-luz" class="status-pill pill-off">APAGADA</div>
+        <div class="btn-group">
+            <button class="btn-success" onclick="emitirComando('luz', 'encender')">Encender</button>
+            <button class="btn-danger" onclick="emitirComando('luz', 'apagar')">Apagar</button>
+        </div>
+    </div>
+
+    <!-- Climatización -->
+    <div class="card">
+        <h2>🌀 Climatización / Aire</h2>
+        <div id="status-ventilador" class="status-pill pill-off">DESACTIVADO</div>
+        <div class="btn-group">
+            <button class="btn-success" onclick="emitirComando('ventilador', 'encender')">Encender</button>
+            <button class="btn-danger" onclick="emitirComando('ventilador', 'apagar')">Apagar</button>
+        </div>
+    </div>
+
+    <!-- Puerta -->
+    <div class="card">
+        <h2>🚪 Control de Acceso</h2>
+        <div id="status-puerta" class="status-pill pill-off">CERRADA</div>
+        <div class="btn-group">
+            <button class="btn-success" onclick="emitirComando('puerta', 'abrir')">Abrir</button>
+            <button class="btn-danger" onclick="emitirComando('puerta', 'cerrar')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Panel de Pruebas PC -->
+<div class="simulator-section">
+    <h3>🧪 Pruebas de Sensores (Simulador PC)</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Prueba cómo reacciona el sistema cuando el sensor PIR detecta personas:
+    </p>
+    <div class="btn-group" style="max-width: 500px;">
+        <button class="btn-sim" onclick="simularSensor('presencia', true)">🚨 Movimiento Detectado</button>
+        <button class="btn-sim" onclick="simularSensor('presencia', false)">🟢 Aula Vacía</button>
+    </div>
+    <p id="sensor-log" style="margin-top: 12px; font-weight: bold; color: var(--accent);"></p>
+</div>
+
+<script>
+    const socket = io();
+
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    socket.on('connect', () => {
+        statusDot.className = 'dot online';
+        statusText.innerText = 'Conectado al Bus de Eventos';
+    });
+
+    socket.on('disconnect', () => {
+        statusDot.className = 'dot';
+        statusText.innerText = 'Desconectado';
+    });
+
+    socket.on('estado_inicial', (data) => {
+        actualizarUI('luz', data.luz);
+        actualizarUI('ventilador', data.ventilador);
+        actualizarUI('puerta', data.puerta === 'abierta');
+    });
+
+    socket.on('evento_estado_cambiado', (data) => {
+        actualizarUI(data.dispositivo, data.estado);
+    });
+
+    socket.on('evento_sensor_disparado', (data) => {
+        const log = document.getElementById('sensor-log');
+        if(data.tipo === 'presencia') {
+            log.innerText = data.valor 
+                ? "⚡ [EVENTO]: ¡Movimiento detectado! (Luces encendidas automáticamente)" 
+                : "🍃 [EVENTO]: Sin movimiento";
+        }
+    });
+
+    function emitirComando(dispositivo, accion) {
+        socket.emit('comando_dispositivo', { dispositivo, accion });
+    }
+
+    function simularSensor(tipo, valor) {
+        socket.emit('simular_sensor', { tipo, valor });
+    }
+
+    function actualizarUI(dispositivo, valorActivo) {
+        const elem = document.getElementById(`status-${dispositivo}`);
+        if(!elem) return;
+
+        if(dispositivo === 'puerta') {
+            elem.innerText = valorActivo ? "ABIERTA" : "CERRADA";
+            elem.className = `status-pill ${valorActivo ? 'pill-on' : 'pill-off'}`;
+        } else {
+            elem.innerText = valorActivo ? "ENCENDIDA" : "APAGADA";
+            elem.className = `status-pill ${valorActivo ? 'pill-on' : 'pill-off'}`;
+        }
+    }
+</script>
+{% endblock %}
