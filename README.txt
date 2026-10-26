@@ -11,6 +11,7 @@ Dependencias
 Activar Entorno Virtual
 
             Windows (PowerShell):
+            python -m venv venv
             .\venv\Scripts\activate
 
             Windows (CMD):
