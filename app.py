@@ -28,17 +28,17 @@ try:
     puerta_servo = Servo(18)  # Pin 12 físico
     sensor_pir = MotionSensor(27) # Pin 13 físico
     
-    print("🚀 HARDWARE REAL CONECTADO: Control de pines GPIO activo")
+    print("HARDWARE REAL CONECTADO: Control de pines GPIO activo")
 except (ImportError, Exception) as e:
     ES_RASPBERRY = False
-    print(f"💻 MODO SIMULACIÓN (Error al cargar GPIO: {e})")
+    print(f"MODO SIMULACIÓN (Error al cargar GPIO: {e})")
 
 
 # --- AUTOMATIZACIÓN DEL SENSOR PIR ---
 def configurar_eventos_hardware():
     if ES_RASPBERRY:
         def al_detectar_movimiento():
-            print("🚨 PIR: Movimiento detectado en el aula física")
+            print("PIR: Movimiento detectado en el aula física")
             estado_aula['presencia'] = True
             
             # Regla automática: si la luz está apagada, encenderla
@@ -50,7 +50,7 @@ def configurar_eventos_hardware():
             socketio.emit('evento_sensor_disparado', {'tipo': 'presencia', 'valor': True})
 
         def al_cesar_movimiento():
-            print("🍃 PIR: Sin movimiento")
+            print("PIR: Sin movimiento")
             estado_aula['presencia'] = False
             socketio.emit('evento_sensor_disparado', {'tipo': 'presencia', 'valor': False})
 
@@ -75,7 +75,7 @@ def lecturas():
 # --- SOCKET.IO (Control en tiempo real) ---
 @socketio.on('connect')
 def al_conectar():
-    print("🔌 Cliente web conectado al servidor")
+    print("Cliente web conectado al servidor")
     emit('estado_inicial', estado_aula)
 
 @socketio.on('comando_dispositivo')
@@ -83,7 +83,7 @@ def manejar_comando(data):
     dispositivo = data.get('dispositivo')
     accion = data.get('accion')
 
-    print(f"📥 Orden desde la web: [{dispositivo}] -> {accion}")
+    print(f"Orden desde la web: [{dispositivo}] -> {accion}")
 
     if dispositivo == 'luz':
         nuevo_estado = (accion == 'encender')

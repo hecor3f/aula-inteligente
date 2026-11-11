@@ -122,7 +122,7 @@
 
 {% block content %}
 <div class="header-panel">
-    <h1>🎛️ Panel de Control General</h1>
+    <h1>Panel de Control General</h1>
     <div class="connection-status">
         <span id="status-dot" class="dot"></span>
         <span id="status-text">Desconectado</span>
@@ -132,7 +132,7 @@
 <div class="dashboard-grid">
     <!-- Luces -->
     <div class="card">
-        <h2>💡 Iluminación Aula</h2>
+        <h2>Iluminación Aula</h2>
         <div id="status-luz" class="status-pill pill-off">APAGADA</div>
         <div class="btn-group">
             <button class="btn-success" onclick="emitirComando('luz', 'encender')">Encender</button>
@@ -142,7 +142,7 @@
 
     <!-- Climatización -->
     <div class="card">
-        <h2>🌀 Climatización / Aire</h2>
+        <h2>Climatización / Aire</h2>
         <div id="status-ventilador" class="status-pill pill-off">DESACTIVADO</div>
         <div class="btn-group">
             <button class="btn-success" onclick="emitirComando('ventilador', 'encender')">Encender</button>
@@ -152,7 +152,7 @@
 
     <!-- Puerta -->
     <div class="card">
-        <h2>🚪 Control de Acceso</h2>
+        <h2>Control de Acceso</h2>
         <div id="status-puerta" class="status-pill pill-off">CERRADA</div>
         <div class="btn-group">
             <button class="btn-success" onclick="emitirComando('puerta', 'abrir')">Abrir</button>
@@ -163,7 +163,7 @@
 
 <!-- Panel de Pruebas PC -->
 <div class="simulator-section">
-    <h3>🧪 Pruebas de Sensores (Simulador PC)</h3>
+    <h3>Pruebas de Sensores (Simulador PC)</h3>
     <p style="color: var(--text-muted); font-size: 0.9rem;">
         Prueba cómo reacciona el sistema cuando el sensor PIR detecta personas:
     </p>
@@ -204,8 +204,8 @@
         const log = document.getElementById('sensor-log');
         if(data.tipo === 'presencia') {
             log.innerText = data.valor 
-                ? "⚡ [EVENTO]: ¡Movimiento detectado! (Luces encendidas automáticamente)" 
-                : "🍃 [EVENTO]: Sin movimiento";
+                ? "[EVENTO]: ¡Movimiento detectado! (Luces encendidas automáticamente)" 
+                : "[EVENTO]: Sin movimiento";
         }
     });
 

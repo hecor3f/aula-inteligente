@@ -1,34 +1,522 @@
 {% extends "base.html" %}
 
-{% block title %}Niveles de Aprendizaje - Raspberry Pi{% endblock %}
+{% block title %}Niveles de Aprendizaje - Raspberry Pi 4 Aula Inteligente{% endblock %}
 
 {% block content %}
-<h1>🚀 Desafíos Raspberry Pi</h1>
-<p style="color: var(--text-muted);">Completa los módulos interactivos para dominar el hardware del aula.</p>
+<style>
+  :root {
+    --path-color: #e2e8f0;
+    --node-completed: #22c55e;
+    --node-completed-shadow: #15803d;
+    --node-active: #3b82f6;
+    --node-active-shadow: #1d4ed8;
+    --node-locked: #94a3b8;
+    --node-locked-shadow: #64748b;
+  }
 
-<div style="display: flex; flex-direction: column; gap: 16px; margin-top: 24px;">
-    <!-- Nivel 1 -->
-    <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #334155;">
-        <span style="color: var(--success); font-weight: bold; font-size: 0.85rem;">NIVEL 1 • BÁSICO</span>
-        <h2 style="margin: 8px 0; color: var(--accent);">¿Qué son los pines GPIO?</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-            Aprende cómo la Raspberry Pi envía señales eléctricas (3.3V) a los componentes de tu maqueta.
-        </p>
-        <button style="background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-            Iniciar Lección
-        </button>
+  .learning-path-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    user-select: none;
+  }
+
+  .path-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .path-header h1 {
+    font-size: 1.8rem;
+    margin: 0 0 8px 0;
+    color: var(--text-main, #0f172a);
+  }
+
+  .path-header p {
+    font-size: 0.95rem;
+    color: var(--text-muted, #64748b);
+    margin: 0;
+  }
+
+  /* SVG para la línea conectora de fondo */
+  .path-line-svg {
+    position: absolute;
+    top: 140px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 160px);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .path-nodes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 42px;
+    width: 100%;
+    align-items: center;
+    z-index: 2;
+  }
+
+  /* Desplazamiento Zig-Zag tipo Duolingo */
+  .node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform 0.2s ease;
+  }
+
+  .node-wrapper:nth-child(8n+1) { transform: translateX(0px); }
+  .node-wrapper:nth-child(8n+2) { transform: translateX(55px); }
+  .node-wrapper:nth-child(8n+3) { transform: translateX(90px); }
+  .node-wrapper:nth-child(8n+4) { transform: translateX(55px); }
+  .node-wrapper:nth-child(8n+5) { transform: translateX(0px); }
+  .node-wrapper:nth-child(8n+6) { transform: translateX(-55px); }
+  .node-wrapper:nth-child(8n+7) { transform: translateX(-90px); }
+  .node-wrapper:nth-child(8n+8) { transform: translateX(-55px); }
+
+  /* Botón circular 3D estilo Duolingo */
+  .path-node {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.1s ease;
+  }
+
+  .path-node:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: none !important;
+  }
+
+  /* Estados de Nivel */
+  .path-node.status-completed {
+    background-color: var(--node-completed);
+    box-shadow: 0 6px 0 var(--node-completed-shadow);
+    color: #ffffff;
+  }
+
+  .path-node.status-active {
+    background-color: var(--node-active);
+    box-shadow: 0 6px 0 var(--node-active-shadow);
+    color: #ffffff;
+    animation: node-pulse 2s infinite ease-in-out;
+  }
+
+  .path-node.status-locked {
+    background-color: var(--node-locked);
+    box-shadow: 0 6px 0 var(--node-locked-shadow);
+    color: #ffffff;
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
+
+  @keyframes node-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+  }
+
+  /* Etiqueta flotante del nivel */
+  .node-tooltip {
+    position: absolute;
+    top: -34px;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    pointer-events: none;
+  }
+
+  .node-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px 4px 0 4px;
+    border-style: solid;
+    border-color: #0f172a transparent transparent transparent;
+  }
+
+  .node-title-label {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-main, #334155);
+    text-align: center;
+    max-width: 140px;
+    line-height: 1.2;
+  }
+
+  .node-icon {
+    width: 30px;
+    height: 30px;
+    fill: stroke;
+  }
+
+  /* Panel lateral / modal de detalle accionado por eventos */
+  .level-detail-drawer {
+    position: fixed;
+    bottom: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    box-sizing: border-box;
+    transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+  }
+
+  .level-detail-drawer.is-open {
+    bottom: 0;
+  }
+
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 99;
+  }
+
+  .drawer-overlay.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+
+<div class="learning-path-container" id="learningPathApp">
+  
+  <header class="path-header">
+    <h1>Ruta de Aprendizaje Raspberry Pi 4</h1>
+    <p>Domina los fundamentos de hardware y automatización de aula</p>
+  </header>
+
+  <!-- Conector curvo dinámico SVG -->
+  <svg class="path-line-svg" xmlns="http://www.w3.org/2000/svg">
+    <path id="pathLine" d="" fill="none" stroke="var(--path-color)" stroke-width="8" stroke-dasharray="10 8" stroke-linecap="round"/>
+  </svg>
+
+  <div class="path-nodes-list" id="nodesContainer">
+    
+    <!-- 8 Niveles (4 Teoría + 4 Conexión/Práctica) -->
+    
+    <!-- NIVEL 1: TEORÍA -->
+    <div class="node-wrapper">
+      <div class="node-tooltip">EMPEZAR</div>
+      <button class="path-node status-completed" 
+              data-event="level:select" 
+              data-level-id="1" 
+              data-type="theory" 
+              data-status="completed"
+              data-title="Fundamentos GPIO y Señales Digitales"
+              data-desc="Comprende el funcionamiento de los pines digitales (3.3V) y la arquitectura lógica del SoC Broadcom BCM2711."
+              aria-label="Nivel 1: Teoría GPIO">
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </button>
+      <span class="node-title-label">1. Fundamentos GPIO</span>
     </div>
 
-    <!-- Nivel 2 -->
-    <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #334155;">
-        <span style="color: var(--warning); font-weight: bold; font-size: 0.85rem;">NIVEL 2 • PRÁCTICO</span>
-        <h2 style="margin: 8px 0; color: var(--accent);">Control de LED con Resistencias</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-            Descubre por qué necesitamos una resistencia de 220 Ohmios para no quemar los pines del procesador.
-        </p>
-        <button style="background: #334155; color: var(--text-muted); border: none; padding: 10px 16px; border-radius: 8px; cursor: not-allowed; font-weight: bold;">
-            Bloqueado
-        </button>
+    <!-- NIVEL 2: TEORÍA -->
+    <div class="node-wrapper">
+      <button class="path-node status-completed" 
+              data-event="level:select" 
+              data-level-id="2" 
+              data-type="theory" 
+              data-status="completed"
+              data-title="Sensores de Entorno y Presencia"
+              data-desc="Estudio téorico de captadores de datos: sensores de humedad/temperatura (DHT) y detectores infrarrojos pasivos (PIR)."
+              aria-label="Nivel 2: Teoría Sensores">
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </button>
+      <span class="node-title-label">2. Sensores de Entorno</span>
     </div>
+
+    <!-- NIVEL 3: TEORÍA -->
+    <div class="node-wrapper">
+      <div class="node-tooltip">ACTUAL</div>
+      <button class="path-node status-active" 
+              data-event="level:select" 
+              data-level-id="3" 
+              data-type="theory" 
+              data-status="active"
+              data-title="Actuadores y Módulos de Relé"
+              data-desc="Aprende cómo la Raspberry Pi aísla y conmuta cargas de alta potencia (luces, ventiladores) mediante Optoacopladores y Relés."
+              aria-label="Nivel 3: Teoría Actuadores">
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+      </button>
+      <span class="node-title-label">3. Actuadores y Relés</span>
+    </div>
+
+    <!-- NIVEL 4: TEORÍA -->
+    <div class="node-wrapper">
+      <button class="path-node status-locked" 
+              data-event="level:select" 
+              data-level-id="4" 
+              data-type="theory" 
+              data-status="locked"
+              data-title="Protocolos de Comunicación Bus I2C/SPI"
+              data-desc="Principios teóricos de comunicación serial síncrona mediante líneas SDA/SCL para la transmisión masiva de métricas."
+              aria-label="Nivel 4: Teoría Protocolos Bus" disabled>
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </button>
+      <span class="node-title-label">4. Buses de Datos I2C</span>
+    </div>
+
+    <!-- NIVEL 5: PRÁCTICA/CONEXIÓN -->
+    <div class="node-wrapper">
+      <button class="path-node status-locked" 
+              data-event="level:select" 
+              data-level-id="5" 
+              data-type="practice" 
+              data-status="locked"
+              data-title="Conexión de LEDs y Cálculo de Resistencias"
+              data-desc="Guía de cableado paso a paso para conectar diodos emisores de luz con resistencia limitadora de 220 Ω a tierra (GND)."
+              aria-label="Nivel 5: Cableado LED" disabled>
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </button>
+      <span class="node-title-label">5. Circuito Indicador LED</span>
+    </div>
+
+    <!-- NIVEL 6: PRÁCTICA/CONEXIÓN -->
+    <div class="node-wrapper">
+      <button class="path-node status-locked" 
+              data-event="level:select" 
+              data-level-id="6" 
+              data-type="practice" 
+              data-status="locked"
+              data-title="Cableado del Sensor PIR y Pulsadores"
+              data-desc="Implementación física de resistencias Pull-Up/Pull-Down y conexión de pines de salida de detectores de presencia."
+              aria-label="Nivel 6: Cableado PIR" disabled>
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </button>
+      <span class="node-title-label">6. Conexión Sensor PIR</span>
+    </div>
+
+    <!-- NIVEL 7: PRÁCTICA/CONEXIÓN -->
+    <div class="node-wrapper">
+      <button class="path-node status-locked" 
+              data-event="level:select" 
+              data-level-id="7" 
+              data-type="practice" 
+              data-status="locked"
+              data-title="Ensamble del Módulo de Conmutación de Aula"
+              data-desc="Conexión segura del módulo de relés de 5V/3.3V a los pines GPIO de control para automatizar luminarias reales."
+              aria-label="Nivel 7: Cableado Relé" disabled>
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </button>
+      <span class="node-title-label">7. Ensamble de Relé</span>
+    </div>
+
+    <!-- NIVEL 8: PRÁCTICA/CONEXIÓN -->
+    <div class="node-wrapper">
+      <button class="path-node status-locked" 
+              data-event="level:select" 
+              data-level-id="8" 
+              data-type="practice" 
+              data-status="locked"
+              data-title="Integración Final: Pantalla OLED y Telemetría"
+              data-desc="Conexión física del bus de 4 hilos (VCC, GND, SDA, SCL) para mostrar diagnósticos del aula en tiempo real."
+              aria-label="Nivel 8: Conexión OLED y Bus" disabled>
+        <svg class="node-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="8" r="7"></circle>
+          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+        </svg>
+      </button>
+      <span class="node-title-label">8. Integración OLED I2C</span>
+    </div>
+
+  </div>
+
 </div>
+
+<!-- Drawer / Modal desplegable accionado por bus de eventos -->
+<div class="drawer-overlay" id="drawerOverlay" data-event="drawer:close"></div>
+<div class="level-detail-drawer" id="levelDrawer">
+  <span id="drawerBadge" style="font-size: 0.75rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;"></span>
+  <h2 id="drawerTitle" style="margin: 12px 0 8px 0; font-size: 1.3rem; color: #0f172a;"></h2>
+  <p id="drawerDesc" style="color: #64748b; font-size: 0.95rem; line-height: 1.4; margin-bottom: 20px;"></p>
+  
+  <button id="btnStartLevel" 
+          data-event="level:start" 
+          style="width: 100%; background: var(--node-active); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 0 var(--node-active-shadow);">
+    Comenzar Lección
+  </button>
+</div>
+
+<script>
+  /**
+   * Arquitectura Orientada a Eventos (Event-Driven Architecture)
+   * Administrador del bus de eventos cliente/interfaz.
+   */
+  class EventBus {
+    static emit(eventName, detail = {}) {
+      const event = new CustomEvent(eventName, { detail, bubbles: true });
+      window.dispatchEvent(event);
+    }
+
+    static on(eventName, callback) {
+      window.addEventListener(eventName, callback);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const drawer = document.getElementById('levelDrawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const drawerTitle = document.getElementById('drawerTitle');
+    const drawerDesc = document.getElementById('drawerDesc');
+    const drawerBadge = document.getElementById('drawerBadge');
+    const btnStart = document.getElementById('btnStartLevel');
+    let activeSelectedLevel = null;
+
+    // 1. Delegación global de eventos DOM -> Bus de Eventos Custom
+    document.addEventListener('click', (e) => {
+      const targetBtn = e.target.closest('[data-event]');
+      if (!targetBtn) return;
+
+      const eventType = targetBtn.getAttribute('data-event');
+
+      if (eventType === 'level:select') {
+        const payload = {
+          id: targetBtn.getAttribute('data-level-id'),
+          title: targetBtn.getAttribute('data-title'),
+          desc: targetBtn.getAttribute('data-desc'),
+          type: targetBtn.getAttribute('data-type'),
+          status: targetBtn.getAttribute('data-status')
+        };
+        EventBus.emit('UI:LEVEL_SELECTED', payload);
+      } 
+      
+      else if (eventType === 'drawer:close') {
+        EventBus.emit('UI:DRAWER_CLOSED');
+      }
+
+      else if (eventType === 'level:start') {
+        EventBus.emit('APP:START_LESSON', { levelId: activeSelectedLevel });
+      }
+    });
+
+    // 2. Suscriptores del Bus de Eventos (Event Handlers)
+    EventBus.on('UI:LEVEL_SELECTED', (e) => {
+      const { id, title, desc, type, status } = e.detail;
+      activeSelectedLevel = id;
+
+      drawerTitle.textContent = title;
+      drawerDesc.textContent = desc;
+
+      if (type === 'theory') {
+        drawerBadge.textContent = `Nivel ${id} • TEORÍA COMPONENTES`;
+        drawerBadge.style.background = '#e0f2fe';
+        drawerBadge.style.color = '#0369a1';
+      } else {
+        drawerBadge.textContent = `Nivel ${id} • CONEXIÓN Y MONTAJE`;
+        drawerBadge.style.background = '#fef3c7';
+        drawerBadge.style.color = '#b45309';
+      }
+
+      if (status === 'locked') {
+        btnStart.disabled = true;
+        btnStart.textContent = 'Bloqueado';
+        btnStart.style.background = 'var(--node-locked)';
+        btnStart.style.boxShadow = 'none';
+      } else {
+        btnStart.disabled = false;
+        btnStart.textContent = status === 'completed' ? 'Repasar Lección' : 'Comenzar Lección';
+        btnStart.style.background = 'var(--node-active)';
+        btnStart.style.boxShadow = '0 4px 0 var(--node-active-shadow)';
+      }
+
+      drawer.classList.add('is-open');
+      overlay.classList.add('is-open');
+    });
+
+    EventBus.on('UI:DRAWER_CLOSED', () => {
+      drawer.classList.remove('is-open');
+      overlay.classList.remove('is-open');
+    });
+
+    EventBus.on('APP:START_LESSON', (e) => {
+      console.log(`[Event-Driven] Iniciando lección ID: ${e.detail.levelId}`);
+      // Redirección a la lección o emisión WebSocket hacia el backend Flask/Django/Node
+      // window.location.href = `/leccion/${e.detail.levelId}`;
+      EventBus.emit('UI:DRAWER_CLOSED');
+    });
+
+    // 3. Trazado de la líneaSVG entre nodos (Estilo ruta Duolingo)
+    function drawPathLine() {
+      const nodes = document.querySelectorAll('.path-node');
+      const svgPath = document.getElementById('pathLine');
+      const container = document.getElementById('learningPathApp');
+      if (!nodes.length || !svgPath) return;
+
+      const containerRect = container.getBoundingClientRect();
+      let pathD = "";
+
+      nodes.forEach((node, index) => {
+        const rect = node.getBoundingClientRect();
+        const x = (rect.left + rect.width / 2) - containerRect.left;
+        const y = (rect.top + rect.height / 2) - containerRect.top;
+
+        if (index === 0) {
+          pathD += `M ${x} ${y}`;
+        } else {
+          const prevRect = nodes[index - 1].getBoundingClientRect();
+          const prevX = (prevRect.left + prevRect.width / 2) - containerRect.left;
+          const prevY = (prevRect.top + prevRect.height / 2) - containerRect.top;
+          
+          const cy1 = prevY + (y - prevY) / 2;
+          const cy2 = prevY + (y - prevY) / 2;
+          pathD += ` C ${prevX} ${cy1}, ${x} ${cy2}, ${x} ${y}`;
+        }
+      });
+
+      svgPath.setAttribute('d', pathD);
+    }
+
+    drawPathLine();
+    window.addEventListener('resize', drawPathLine);
+  });
+</script>
 {% endblock %}
