@@ -1,118 +1,953 @@
 {% extends "base.html" %}
 
-{% block title %}Lecturas STEAM - Aula Inteligente{% endblock %}
+{% block title %}Lecturas STEAM e IoT{% endblock %}
 
 {% block head %}
 <style>
     .header-section {
-        margin-bottom: 24px;
+        margin-bottom: 25px;
     }
 
     .header-section h1 {
-        margin: 0 0 8px 0;
-        font-size: 1.8rem;
+        font-size: 2rem;
+        margin-bottom: 8px;
     }
 
+    .header-section p {
+        color: var(--text-muted);
+    }
+
+    /* PROGRESO */
+    .progress-panel {
+        background: var(--card-bg);
+        border: 1px solid #334155;
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 28px;
+    }
+
+    .progress-bar {
+        height: 10px;
+        background: #334155;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #0ea5e9, #22c55e);
+        transition: width .4s;
+    }
+
+    /* TARJETAS */
     .readings-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 20px;
     }
 
     .reading-card {
-        background-color: var(--card-bg);
+        background: var(--card-bg);
         border: 1px solid #334155;
         border-radius: 16px;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: transform 0.2s, border-color 0.2s;
+        padding: 22px;
+        transition: .3s;
     }
 
     .reading-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-5px);
         border-color: var(--accent);
     }
 
     .badge-tag {
         display: inline-block;
-        padding: 4px 10px;
+        padding: 5px 12px;
         border-radius: 8px;
-        font-size: 0.75rem;
+        font-size: .75rem;
         font-weight: bold;
-        text-transform: uppercase;
         margin-bottom: 12px;
-        width: fit-content;
     }
 
-    .tag-iot { background: rgba(14, 165, 233, 0.15); color: var(--accent); }
-    .tag-energy { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-    .tag-hardware { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .tag-iot {
+        color: #0ea5e9;
+        background: #0ea5e922;
+    }
+
+    .tag-energy {
+        color: #22c55e;
+        background: #22c55e22;
+    }
+
+    .tag-hardware {
+        color: #f59e0b;
+        background: #f59e0b22;
+    }
+
+    .tag-steam {
+        color: #a855f7;
+        background: #a855f722;
+    }
+
+    .tag-code {
+        color: #ec4899;
+        background: #ec489922;
+    }
+
+    .tag-security {
+        color: #ef4444;
+        background: #ef444422;
+    }
 
     .reading-card h2 {
-        font-size: 1.2rem;
-        margin: 0 0 10px 0;
-        color: var(--text-main);
+        font-size: 1.15rem;
+        margin-bottom: 12px;
     }
 
     .reading-card p {
         color: var(--text-muted);
-        font-size: 0.92rem;
-        line-height: 1.5;
-        margin: 0 0 16px 0;
+        line-height: 1.6;
+        font-size: .92rem;
     }
 
-    .time-estimate {
-        font-size: 0.8rem;
+    .reading-content {
+        display: none;
+        border-top: 1px solid #334155;
+        margin-top: 18px;
+        padding-top: 15px;
+        animation: aparecer .3s;
+    }
+
+    .reading-content.show {
+        display: block;
+    }
+
+    .reading-content h3 {
+        color: var(--accent);
+        margin-top: 15px;
+    }
+
+    .reading-content li {
         color: var(--text-muted);
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .reading-content p {
+        line-height: 1.7;
+    }
+
+    button {
+        cursor: pointer;
+        border: none;
+        border-radius: 9px;
+        padding: 11px 15px;
+        font-weight: bold;
+        transition: .2s;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.12);
+    }
+
+    .btn-primary {
+        background: #0ea5e9;
+        color: white;
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    .btn-complete {
+        background: #22c55e;
+        color: white;
+        margin-top: 12px;
+    }
+
+    /* SECCIONES INFERIORES */
+    .extra-section {
+        background: var(--card-bg);
+        border: 1px solid #334155;
+        border-radius: 16px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+
+    .extra-section h2 {
+        margin-top: 0;
+        color: var(--accent);
+    }
+
+    /* QUIZ */
+    .question {
+        background: #0f172a;
+        border-radius: 12px;
+        padding: 18px;
+        margin: 15px 0;
+    }
+
+    .answer-btn {
+        display: block;
+        width: 100%;
+        background: #334155;
+        color: white;
+        text-align: left;
+        margin: 8px 0;
+    }
+
+    .answer-btn.correct {
+        background: #166534;
+    }
+
+    .answer-btn.incorrect {
+        background: #991b1b;
+    }
+
+    .feedback {
+        margin-top: 12px;
+        font-weight: bold;
+    }
+
+    /* GLOSARIO */
+    .glossary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .glossary-item {
+        background: #0f172a;
+        padding: 16px;
+        border-radius: 10px;
+        border-left: 4px solid #0ea5e9;
+    }
+
+    .glossary-item strong {
+        color: #38bdf8;
+    }
+
+    .glossary-item p {
+        color: var(--text-muted);
+        font-size: .9rem;
+        line-height: 1.5;
+    }
+
+    @keyframes aparecer {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media(max-width: 600px) {
+        .header-section h1 { font-size: 1.5rem; }
+        .extra-section { padding: 17px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+
 <div class="header-section">
-    <h1>📚 Lecturas STEAM e IoT</h1>
-    <p style="color: var(--text-muted); margin: 0;">
-        Explora conceptos clave sobre domótica, energía sustentable y tecnología para jóvenes inventores.
-    </p>
+    <h1>📚 Centro de Aprendizaje STEAM</h1>
+    <p>Aprende, experimenta y descubre cómo funciona la tecnología de un aula inteligente.</p>
 </div>
 
+<!-- PROGRESO -->
+<div class="progress-panel">
+    <h3>🎯 Mi progreso de aprendizaje</h3>
+    <p id="progress-text">Has completado 0 de 9 lecturas.</p>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+</div>
+
+<!-- LECTURAS -->
 <div class="readings-grid">
-    <!-- Lectura 1 -->
+
+    <!-- LECTURA 1 -->
     <div class="reading-card">
-        <div>
-            <span class="badge-tag tag-iot">IoT & Redes</span>
-            <h2>🌐 ¿Qué es el Internet de las Cosas (IoT)?</h2>
+        <span class="badge-tag tag-iot">IoT Y REDES</span>
+        <h2>🌿 Internet de las Cosas (IoT)</h2>
+        <p>Descubre cómo los objetos cotidianos pueden conectarse a Internet y comunicarse entre sí.</p>
+        <small>⏱️ 3 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(1)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-1">
+            <h3>¿Qué es el IoT?</h3>
             <p>
-                Descubre cómo los objetos cotidianos, como focos, puertas y sensores, se conectan a Internet para comunicarse entre sí y tomar decisiones inteligentes.
+                El Internet de las Cosas, conocido como IoT,
+                es una tecnología que permite conectar objetos
+                físicos a Internet para intercambiar información.
             </p>
+
+            <h3>¿Cómo funciona?</h3>
+            <p>
+                Los dispositivos utilizan sensores para recoger
+                información del entorno. Después, esa información
+                puede enviarse a un sistema que toma decisiones
+                y ejecuta acciones automáticamente.
+            </p>
+
+            <h3>Ejemplos en la vida cotidiana</h3>
+            <ul>
+                <li>Luces inteligentes que se encienden automáticamente.</li>
+                <li>Cámaras de seguridad conectadas.</li>
+                <li>Termostatos que regulan la temperatura.</li>
+                <li>Puertas automáticas con sensores.</li>
+            </ul>
+
+            <h3>Aplicación en nuestra aula</h3>
+            <p>
+                Nuestra Raspberry Pi puede recibir información
+                de sensores y controlar luces, ventiladores y puertas.
+                Así conseguimos un aula inteligente.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(1)">
+                ✓ Marcar como leída
+            </button>
         </div>
-        <div class="time-estimate">⏱️ Lectura de 3 min</div>
     </div>
 
-    <!-- Lectura 2 -->
+    <!-- LECTURA 2 -->
     <div class="reading-card">
-        <div>
-            <span class="badge-tag tag-energy">Sustentabilidad</span>
-            <h2>⚡ Eficiencia Energética en el Aula</h2>
+        <span class="badge-tag tag-energy">SUSTENTABILIDAD</span>
+        <h2>⚡ Eficiencia Energética</h2>
+        <p>Aprende cómo la automatización permite ahorrar electricidad y cuidar el medio ambiente.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(2)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-2">
+            <h3>¿Qué es la eficiencia energética?</h3>
             <p>
-                ¿Por qué apagar las luces automáticamente cuando no hay nadie? Aprende cómo la automatización ayuda a reducir la huella de carbono y cuidar el planeta.
+                Consiste en utilizar la energía de manera responsable,
+                evitando desperdicios y consiguiendo los mismos
+                resultados con un menor consumo eléctrico.
             </p>
+
+            <h3>¿Por qué es importante?</h3>
+            <ul>
+                <li>Reduce el consumo de electricidad.</li>
+                <li>Ayuda a disminuir las emisiones contaminantes.</li>
+                <li>Reduce los costos de energía.</li>
+                <li>Promueve el cuidado del planeta.</li>
+            </ul>
+
+            <h3>Automatización inteligente</h3>
+            <p>
+                Un sensor de movimiento puede detectar cuando
+                una persona entra en un aula. El sistema puede
+                encender las luces automáticamente.
+            </p>
+
+            <p>
+                Cuando no hay movimiento durante un tiempo
+                determinado, el sistema puede apagar las luces
+                para evitar gastar energía innecesariamente.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                Podemos utilizar la Raspberry Pi y un sensor PIR
+                para automatizar la iluminación del aula.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(2)">
+                ✓ Marcar como leída
+            </button>
         </div>
-        <div class="time-estimate">⏱️ Lectura de 4 min</div>
     </div>
 
-    <!-- Lectura 3 -->
+    <!-- LECTURA 3 -->
     <div class="reading-card">
-        <div>
-            <span class="badge-tag tag-hardware">Hardware</span>
-            <h2>🤖 Sensores y Actuadores: Ojos y Músculos</h2>
+        <span class="badge-tag tag-hardware">HARDWARE</span>
+        <h2>🤖 Sensores y Actuadores</h2>
+        <p>Conoce los componentes que permiten a una máquina detectar el entorno y realizar acciones.</p>
+        <small>⏱️ 5 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(3)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-3">
+            <h3>¿Qué son los sensores?</h3>
             <p>
-                Los sensores detectan el entorno (como el movimiento o la temperatura) y los actuadores realizan la acción física (como abrir una puerta con un servomotor).
+                Son componentes electrónicos que detectan
+                cambios en el entorno y convierten esa información
+                en señales que un sistema puede interpretar.
             </p>
+
+            <h3>Tipos de sensores</h3>
+            <ul>
+                <li>PIR: detecta movimiento y presencia.</li>
+                <li>DHT: mide temperatura y humedad.</li>
+                <li>LDR: detecta la intensidad de la luz.</li>
+                <li>Ultrasónico: mide distancias.</li>
+            </ul>
+
+            <h3>¿Qué son los actuadores?</h3>
+            <p>
+                Son dispositivos que reciben instrucciones
+                y producen una acción física.
+            </p>
+
+            <ul>
+                <li>LED: produce luz.</li>
+                <li>Motor: genera movimiento.</li>
+                <li>Servomotor: controla posiciones.</li>
+                <li>Relé: permite controlar circuitos eléctricos.</li>
+            </ul>
+
+            <h3>Relación con Raspberry Pi</h3>
+            <p>
+                La Raspberry Pi procesa la información de los
+                sensores y envía instrucciones a los actuadores.
+                De esta forma puede controlar diferentes
+                dispositivos de nuestro proyecto.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(3)">
+                ✓ Marcar como leída
+            </button>
         </div>
-        <div class="time-estimate">⏱️ Lectura de 5 min</div>
+    </div>
+
+
+    <!-- LECTURA 4 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-hardware">HARDWARE</span>
+        <h2>🍓 Raspberry Pi y GPIO</h2>
+        <p>Descubre cómo una computadora del tamaño de una tarjeta puede ser el cerebro de un aula inteligente.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(4)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-4">
+            <h3>¿Qué es una Raspberry Pi?</h3>
+            <p>
+                Es una computadora pequeña y económica que incluye procesador, memoria y puertos para conectar pantallas, teclados y redes. Funciona con un sistema operativo y puede ejecutar programas en lenguajes como Python.
+            </p>
+
+            <h3>¿Qué son los pines GPIO?</h3>
+            <p>
+                GPIO significa «entradas y salidas de propósito general». Son los pines metálicos de la placa que permiten conectar componentes electrónicos para recibir señales o enviarlas.
+            </p>
+
+            <h3>Usos de los pines</h3>
+            <ul>
+                <li>Entrada: leer datos de un sensor, como el PIR o el DHT.</li>
+                <li>Salida: encender un LED o activar un relé.</li>
+                <li>Alimentación: entregar 3.3 V o 5 V a componentes sencillos.</li>
+                <li>Tierra (GND): cerrar el circuito eléctrico.</li>
+            </ul>
+
+            <h3>Precauciones importantes</h3>
+            <p>
+                Los pines GPIO trabajan con 3.3 V, por lo que conectar voltajes mayores puede dañar la placa. Siempre hay que revisar el esquema del circuito y usar resistencias con los LED antes de encender el sistema.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                La Raspberry Pi es el cerebro de EduBot Classroom: lee los sensores conectados a sus pines GPIO, ejecuta el programa y controla luces, ventiladores y puertas.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(4)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+    <!-- LECTURA 5 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-iot">IoT Y REDES</span>
+        <h2>🏠 Domótica y Aulas Inteligentes</h2>
+        <p>Conoce cómo la automatización transforma casas, edificios y salones de clase.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(5)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-5">
+            <h3>¿Qué es la domótica?</h3>
+            <p>
+                Es el conjunto de tecnologías que automatizan y controlan los sistemas de un espacio: iluminación, temperatura, seguridad, accesos y consumo de energía.
+            </p>
+
+            <h3>¿Qué es un aula inteligente?</h3>
+            <p>
+                Es un salón de clase que usa sensores, dispositivos conectados y software para adaptarse a quienes lo usan, mejorando la comodidad, la seguridad y la experiencia de aprendizaje.
+            </p>
+
+            <h3>Elementos de un aula inteligente</h3>
+            <ul>
+                <li>Sensores que detectan presencia, luz y temperatura.</li>
+                <li>Un controlador que procesa los datos, como la Raspberry Pi.</li>
+                <li>Actuadores que encienden luces, ventiladores o abren puertas.</li>
+                <li>Una interfaz web para ver y controlar el estado del aula.</li>
+            </ul>
+
+            <h3>Beneficios</h3>
+            <ul>
+                <li>Ahorro de energía al apagar lo que no se usa.</li>
+                <li>Mayor comodidad para estudiantes y docentes.</li>
+                <li>Más seguridad con control de accesos.</li>
+                <li>Oportunidad de aprender tecnología con ejemplos reales.</li>
+            </ul>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                EduBot Classroom reúne estas ideas en una plataforma educativa: el aula detecta su entorno, responde automáticamente y permite aprender cómo funciona la tecnología que la controla.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(5)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+    <!-- LECTURA 6 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-steam">EDUCACIÓN</span>
+        <h2>🎓 Robótica Educativa y STEAM</h2>
+        <p>Aprende por qué construir proyectos tecnológicos ayuda a comprender ciencia, ingeniería y arte.</p>
+        <small>⏱️ 3 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(6)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-6">
+            <h3>¿Qué significa STEAM?</h3>
+            <p>
+                Es un enfoque educativo que integra Ciencia, Tecnología, Ingeniería, Arte y Matemáticas para resolver problemas de forma creativa y práctica.
+            </p>
+
+            <h3>¿Qué es la robótica educativa?</h3>
+            <p>
+                Es el uso de robots y sistemas programables como herramienta de aprendizaje. Los estudiantes diseñan, arman, programan y prueban sus propias soluciones.
+            </p>
+
+            <h3>Habilidades que se desarrollan</h3>
+            <ul>
+                <li>Pensamiento lógico y resolución de problemas.</li>
+                <li>Trabajo en equipo y comunicación.</li>
+                <li>Creatividad para diseñar soluciones.</li>
+                <li>Aprendizaje a partir de la prueba y el error.</li>
+            </ul>
+
+            <h3>Aprender haciendo</h3>
+            <p>
+                Cuando un estudiante conecta un sensor y ve que una luz se enciende, comprende de forma directa conceptos como señales, programación y circuitos. Equivocarse y corregir hace parte del proceso.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                EduBot Classroom busca acercar la robótica y el IoT al salón de clase con herramientas accesibles, para que los estudiantes aprendan experimentando.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(6)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+    <!-- LECTURA 7 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-security">SEGURIDAD</span>
+        <h2>🔒 Seguridad y Privacidad en IoT</h2>
+        <p>Entiende por qué proteger los dispositivos conectados es tan importante como hacerlos funcionar.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(7)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-7">
+            <h3>¿Por qué es importante?</h3>
+            <p>
+                Cada dispositivo conectado a una red es un posible punto de entrada para personas no autorizadas. Si no se protegen bien, pueden filtrarse datos o controlarse equipos de forma indebida.
+            </p>
+
+            <h3>Riesgos frecuentes</h3>
+            <ul>
+                <li>Contraseñas débiles o las que vienen por defecto.</li>
+                <li>Software desactualizado con fallas conocidas.</li>
+                <li>Redes Wi-Fi sin protección.</li>
+                <li>Datos enviados sin cifrar.</li>
+            </ul>
+
+            <h3>Buenas prácticas</h3>
+            <ul>
+                <li>Cambiar las contraseñas predeterminadas por unas robustas.</li>
+                <li>Mantener actualizados el sistema operativo y los programas.</li>
+                <li>Usar una red protegida con cifrado WPA2 o superior.</li>
+                <li>Permitir acceso solo a las personas que lo necesitan.</li>
+            </ul>
+
+            <h3>Privacidad de los datos</h3>
+            <p>
+                Un sistema educativo debe recoger solo los datos necesarios. Los sensores de movimiento o temperatura no requieren datos personales, y es mejor evitar almacenar información que identifique a los estudiantes.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                En el aula inteligente, la Raspberry Pi debe tener contraseña segura, acceso controlado a la interfaz web y actualizaciones al día para que el sistema sea confiable.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(7)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+    <!-- LECTURA 8 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-code">PROGRAMACIÓN</span>
+        <h2>🐍 Programación con Python</h2>
+        <p>Aprende por qué Python es el lenguaje más usado para dar órdenes a una Raspberry Pi.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(8)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-8">
+            <h3>¿Qué es Python?</h3>
+            <p>
+                Es un lenguaje de programación de sintaxis sencilla y fácil de leer. Se usa en inteligencia artificial, análisis de datos, desarrollo web y también en proyectos de electrónica.
+            </p>
+
+            <h3>¿Por qué se usa con Raspberry Pi?</h3>
+            <ul>
+                <li>Viene instalado en el sistema operativo de la placa.</li>
+                <li>Tiene librerías listas para controlar los pines GPIO.</li>
+                <li>Es ideal para quienes empiezan a programar.</li>
+                <li>Cuenta con una gran comunidad y muchos ejemplos.</li>
+            </ul>
+
+            <h3>Ideas básicas de programación</h3>
+            <ul>
+                <li>Variables: guardan datos como una temperatura.</li>
+                <li>Condicionales: toman decisiones, por ejemplo «si hay movimiento, enciende la luz».</li>
+                <li>Bucles: repiten acciones de forma continua.</li>
+                <li>Funciones: agrupan instrucciones para reutilizarlas.</li>
+            </ul>
+
+            <h3>Un ejemplo en lenguaje cotidiano</h3>
+            <p>
+                Un programa para el aula podría decir: «si el sensor PIR detecta movimiento, encender la luz; si pasan cinco minutos sin movimiento, apagarla». Python convierte esa lógica en instrucciones que la Raspberry Pi puede ejecutar.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                El software de EduBot Classroom lee los sensores, decide qué acción tomar y envía las órdenes a los actuadores, y todo ese proceso se puede programar en Python.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(8)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+    <!-- LECTURA 9 -->
+    <div class="reading-card">
+        <span class="badge-tag tag-hardware">HARDWARE</span>
+        <h2>🔌 Circuitos Eléctricos Básicos</h2>
+        <p>Comprende cómo circula la electricidad y qué componentes se necesitan para armar un circuito.</p>
+        <small>⏱️ 4 minutos</small>
+
+        <button class="btn-primary" onclick="toggleReading(9)">
+            Leer contenido completo ↓
+        </button>
+
+        <div class="reading-content" id="reading-9">
+            <h3>¿Qué es un circuito eléctrico?</h3>
+            <p>
+                Es un camino cerrado por el que circula la corriente eléctrica. Está formado por una fuente de energía, conductores y componentes que usan esa energía, como un LED o un motor.
+            </p>
+
+            <h3>Conceptos fundamentales</h3>
+            <ul>
+                <li>Voltaje (V): la «fuerza» que impulsa la corriente.</li>
+                <li>Corriente (A): la cantidad de electricidad que circula.</li>
+                <li>Resistencia (Ω): lo que se opone al paso de la corriente.</li>
+                <li>Ley de Ohm: relaciona estas tres magnitudes, V = I × R.</li>
+            </ul>
+
+            <h3>Componentes comunes</h3>
+            <ul>
+                <li>Resistencia: limita la corriente que llega a un componente.</li>
+                <li>LED: se enciende cuando recibe la corriente adecuada.</li>
+                <li>Pulsador: abre o cierra el circuito manualmente.</li>
+                <li>Protoboard: permite armar circuitos sin soldar.</li>
+            </ul>
+
+            <h3>Seguridad al trabajar</h3>
+            <p>
+                Antes de modificar un circuito hay que desconectar la fuente de energía, revisar las conexiones y no tocar cables de la red eléctrica de la pared. En las prácticas escolares se trabaja con voltajes bajos.
+            </p>
+
+            <h3>Aplicación en nuestro proyecto</h3>
+            <p>
+                Para encender una luz de la red eléctrica desde la Raspberry Pi se usa un relé, que actúa como un interruptor controlado por la placa y mantiene separados los circuitos de bajo y alto voltaje.
+            </p>
+
+            <button class="btn-complete" onclick="completeReading(9)">
+                ✓ Marcar como leída
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- CUESTIONARIO -->
+<div class="extra-section">
+    <h2>🧠 Comprueba tus conocimientos</h2>
+    <p>Responde las siguientes preguntas para evaluar lo aprendido.</p>
+
+    <div class="question">
+        <h3>1. ¿Qué significa GPIO?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,true,1)">A. Entradas y salidas de propósito general</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,1)">B. Gestor de procesos de Internet y objetos</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,1)">C. Generador de pulsos de entrada y salida</button>
+        <div class="feedback" id="feedback-1"></div>
+    </div>
+
+    <div class="question">
+        <h3>2. ¿Con qué voltaje trabajan los pines GPIO de la Raspberry Pi?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,2)">A. 12 V</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,2)">B. 3.3 V</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,2)">C. 220 V</button>
+        <div class="feedback" id="feedback-2"></div>
+    </div>
+
+    <div class="question">
+        <h3>3. ¿Qué es la domótica?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,3)">A. Un tipo de sensor de movimiento</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,3)">B. Un lenguaje de programación</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,3)">C. El conjunto de tecnologías que automatizan y controlan los sistemas de un espacio</button>
+        <div class="feedback" id="feedback-3"></div>
+    </div>
+
+    <div class="question">
+        <h3>4. ¿Qué elemento de un aula inteligente procesa los datos de los sensores?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,true,4)">A. El controlador, como la Raspberry Pi</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,4)">B. El actuador</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,4)">C. La puerta</button>
+        <div class="feedback" id="feedback-4"></div>
+    </div>
+
+    <div class="question">
+        <h3>5. ¿Qué disciplinas integra el enfoque STEAM?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,5)">A. Solo ciencia y matemáticas</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,5)">B. Ciencia, tecnología, ingeniería, arte y matemáticas</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,5)">C. Solo tecnología e ingeniería</button>
+        <div class="feedback" id="feedback-5"></div>
+    </div>
+
+    <div class="question">
+        <h3>6. ¿Qué habilidad se desarrolla al aprender con robótica educativa?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,6)">A. Memorizar sin practicar</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,6)">B. Evitar el trabajo en equipo</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,6)">C. Resolver problemas de forma creativa</button>
+        <div class="feedback" id="feedback-6"></div>
+    </div>
+
+    <div class="question">
+        <h3>7. ¿Cuál es un riesgo frecuente en los dispositivos IoT?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,7)">A. Mantener el software actualizado</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,7)">B. Usar contraseñas débiles o las predeterminadas</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,7)">C. Usar una red protegida</button>
+        <div class="feedback" id="feedback-7"></div>
+    </div>
+
+    <div class="question">
+        <h3>8. ¿Qué práctica ayuda a proteger la red de un aula inteligente?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,true,8)">A. Usar cifrado WPA2 o superior</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,8)">B. Compartir la contraseña con todos</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,8)">C. Dejar la red sin clave</button>
+        <div class="feedback" id="feedback-8"></div>
+    </div>
+
+    <div class="question">
+        <h3>9. ¿Qué estructura de programación toma decisiones, como «si hay movimiento, enciende la luz»?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,9)">A. Un bucle</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,9)">B. Una variable</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,9)">C. Un condicional</button>
+        <div class="feedback" id="feedback-9"></div>
+    </div>
+
+    <div class="question">
+        <h3>10. ¿Por qué se usa Python con la Raspberry Pi?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,true,10)">A. Porque tiene librerías para controlar los pines GPIO</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,10)">B. Porque solo funciona en computadoras pequeñas</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,10)">C. Porque no necesita instalarse nunca</button>
+        <div class="feedback" id="feedback-10"></div>
+    </div>
+
+    <div class="question">
+        <h3>11. ¿Qué relaciona la ley de Ohm?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,true,11)">A. Voltaje, corriente y resistencia</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,11)">B. Luz, sonido y movimiento</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,11)">C. Memoria, procesador y red</button>
+        <div class="feedback" id="feedback-11"></div>
+    </div>
+
+    <div class="question">
+        <h3>12. ¿Para qué sirve un relé en el proyecto?</h3>
+        <button class="answer-btn" onclick="checkAnswer(this,false,12)">A. Medir la temperatura del aula</button>
+        <button class="answer-btn" onclick="checkAnswer(this,false,12)">B. Guardar los datos de los sensores</button>
+        <button class="answer-btn" onclick="checkAnswer(this,true,12)">C. Actuar como un interruptor controlado por la Raspberry Pi</button>
+        <div class="feedback" id="feedback-12"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+        <h3 id="quiz-score">Puntuación: 0 / 12</h3>
+        <button class="btn-primary" onclick="resetQuiz()">Reiniciar cuestionario</button>
     </div>
 </div>
+
+<!-- GLOSARIO -->
+<div class="extra-section">
+    <h2>📖 Glosario STEAM</h2>
+    <p>Conoce algunos términos importantes de nuestro proyecto.</p>
+
+    <div class="glossary-grid">
+
+        <div class="glossary-item">
+            <strong>IoT</strong>
+            <p>Conexión de objetos físicos a Internet.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>Raspberry Pi</strong>
+            <p>Computadora pequeña utilizada para desarrollar proyectos tecnológicos.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>GPIO</strong>
+            <p>Conexiones que permiten interactuar con componentes electrónicos.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>Sensor PIR</strong>
+            <p>Dispositivo que detecta movimiento mediante cambios de radiación infrarroja.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>Actuador</strong>
+            <p>Componente que realiza una acción física.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>Automatización</strong>
+            <p>Ejecución de tareas sin intervención humana constante.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>Domótica</strong>
+            <p>Aplicación de tecnología para automatizar espacios y edificios.</p>
+        </div>
+
+        <div class="glossary-item">
+            <strong>STEAM</strong>
+            <p>Integración de ciencia, tecnología, ingeniería, arte y matemáticas.</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // CONTROL DE LECTURAS
+    let completed = new Set();
+
+    function toggleReading(id) {
+        const content = document.getElementById('reading-' + id);
+        content.classList.toggle('show');
+    }
+
+    function completeReading(id) {
+        completed.add(id);
+        updateProgress();
+
+        const button = document.querySelector(
+            '#reading-' + id + ' .btn-complete'
+        );
+
+        button.textContent = '✓ Lectura completada';
+        button.disabled = true;
+    }
+
+    function updateProgress() {
+        const total = 9;
+        const count = completed.size;
+        const percentage = (count / total) * 100;
+
+        document.getElementById('progress-fill').style.width =
+            percentage + '%';
+
+        document.getElementById('progress-text').textContent =
+            'Has completado ' + count + ' de ' + total + ' lecturas.';
+    }
+
+    // CUESTIONARIO
+    const TOTAL_PREGUNTAS = 12;
+    let score = 0;
+    let answered = new Set();
+
+    function checkAnswer(button, correct, question) {
+        if (answered.has(question)) return;
+
+        answered.add(question);
+
+        const feedback = document.getElementById('feedback-' + question);
+
+        if (correct) {
+            score++;
+            button.classList.add('correct');
+            feedback.textContent = '✓ ¡Correcto! Excelente trabajo.';
+            feedback.style.color = '#22c55e';
+        } else {
+            button.classList.add('incorrect');
+            feedback.textContent = '✗ Respuesta incorrecta. Revisa el contenido de las lecturas.';
+            feedback.style.color = '#ef4444';
+
+            const buttons = button.parentElement.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes('true')) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+
+        document.getElementById('quiz-score').textContent =
+            'Puntuación: ' + score + ' / ' + TOTAL_PREGUNTAS;
+    }
+
+    function resetQuiz() {
+        score = 0;
+        answered.clear();
+
+        document.querySelectorAll('.answer-btn').forEach(button => {
+            button.classList.remove('correct', 'incorrect');
+        });
+
+        document.querySelectorAll('.feedback').forEach(feedback => {
+            feedback.textContent = '';
+        });
+
+        document.getElementById('quiz-score').textContent =
+            'Puntuación: 0 / ' + TOTAL_PREGUNTAS;
+    }
+</script>
+
 {% endblock %}
